@@ -1,0 +1,179 @@
+<#
+    Game Optimization & Restore Script
+    Features: 
+    1. Install Tweaks (CPU, Input, GPU, System, Memory)
+    2. Restore Windows Defaults
+    3. UI Progress Bar 0-100%
+#>
+
+# --- ตรวจสอบสิทธิ์ Administrator (Auto Elevate) ---
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Host "กำลังขอสิทธิ์ Administrator เพื่อแก้ไข Registry..." -ForegroundColor Yellow
+    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    Exit
+}
+
+# --- ฟังก์ชัน: แสดงแถบโหลด (Progress Bar UI) ---
+function Show-ProgressBar {
+    param (
+        [string]$Activity,
+        [int]$Percent,
+        [string]$Status
+    )
+    Write-Progress -Activity $Activity -Status "$Status ($Percent%)" -PercentComplete $Percent
+    Start-Sleep -Milliseconds 50 # หน่วงเวลาเล็กน้อยเพื่อให้เห็นแถบวิ่งสวยๆ
+}
+
+# --- ฟังก์ชัน: ตั้งค่า Registry (Helper) ---
+function Set-RegKey {
+    param ($Path, $Name, $Value, $Type)
+    if (!(Test-Path $Path)) { New-Item -Path $Path -Force | Out-Null }
+    New-ItemProperty -Path $Path -Name $Name -Value $Value -PropertyType $Type -Force | Out-Null
+}
+
+# --- ส่วนที่ 1: ติดตั้งค่า Optimization (Install) ---
+function Install-Tweaks {
+    Clear-Host
+    Write-Host ">>> กำลังติดตั้งค่า Optimization..." -ForegroundColor Green
+    
+    $steps = 10
+    $currentStep = 0
+
+    # 1. CPU Priority
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Configuring CPU Priority..."
+    $path = "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl"
+    Set-RegKey $path "Win32TimeSlice" 1 "DWord"
+    Set-RegKey $path "Win32PrioritySeparation" 0x26 "DWord"
+    Set-RegKey $path "IRQ8Priority" 1 "DWord"
+
+    # 2. Mouse Optimization
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Optimizing Mouse..."
+    $path = "HKCU:\Control Panel\Mouse"
+    Set-RegKey $path "MouseSensitivity" "10" "String"
+    Set-RegKey $path "MouseSpeed" "0" "String"
+    Set-RegKey $path "MouseThreshold1" "0" "String"
+    Set-RegKey $path "MouseThreshold2" "0" "String"
+
+    # 3. Keyboard Optimization
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Optimizing Keyboard..."
+    $path = "HKCU:\Control Panel\Keyboard"
+    Set-RegKey $path "KeyboardDelay" "0" "String"
+    Set-RegKey $path "KeyboardSpeed" "31" "String"
+
+    # 4. Input Data Queue
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Setting Input Queue Sizes..."
+    Set-RegKey "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" "KeyboardDataQueueSize" 0x0a "DWord"
+    Set-RegKey "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" "MouseDataQueueSize" 0x0a "DWord"
+
+    # 5. GPU Optimization
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Boosting GPU Priority..."
+    $path = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games"
+    Set-RegKey $path "GPU Priority" 8 "DWord"
+    Set-RegKey $path "Priority" 6 "DWord"
+    Set-RegKey $path "Scheduling Category" "High" "String"
+    Set-RegKey $path "SFIO Priority" "High" "String"
+
+    # 6. System Network Throttling
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Disabling Network Throttling..."
+    $path = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
+    Set-RegKey $path "NetworkThrottlingIndex" 0xffffffff "DWord"
+    Set-RegKey $path "SystemResponsiveness" 0 "DWord"
+
+    # 7. Memory Management (Disable Paging)
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Tuning Memory Management..."
+    $path = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+    Set-RegKey $path "DisablePagingExecutive" 1 "DWord"
+    
+    # 8. Large System Cache
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Configuring Cache..."
+    Set-RegKey $path "LargeSystemCache" 0 "DWord"
+
+    # 9. IO Page Lock Limit
+    $currentStep++; Show-ProgressBar "Applying Tweaks" ($currentStep / $steps * 100) "Setting IO Limits..."
+    Set-RegKey $path "IOPageLockLimit" 0x01000000 "DWord"
+
+    # 10. Complete
+    $currentStep++; Show-ProgressBar "Done" 100 "Optimization Completed!"
+    Start-Sleep -Seconds 1
+    Write-Host "`n[SUCCESS] ติดตั้งค่าเรียบร้อย! กรุณารีสตาร์ทคอมพิวเตอร์เพื่อให้ผลลัพธ์ทำงาน" -ForegroundColor Cyan
+}
+
+# --- ส่วนที่ 2: ล้างค่ากลับเป็นค่าเดิม (Restore) ---
+function Restore-Defaults {
+    Clear-Host
+    Write-Host ">>> กำลังล้างค่ากลับสู่ Windows Default..." -ForegroundColor Yellow
+    
+    $steps = 6
+    $currentStep = 0
+
+    # 1. Restore CPU Priority (Delete added keys)
+    $currentStep++; Show-ProgressBar "Restoring Defaults" ($currentStep / $steps * 100) "Resetting CPU Priority..."
+    $path = "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl"
+    Remove-ItemProperty -Path $path -Name "Win32TimeSlice" -ErrorAction SilentlyContinue
+    Set-RegKey $path "Win32PrioritySeparation" 2 "DWord" # Default varies, usually 2
+    Remove-ItemProperty -Path $path -Name "IRQ8Priority" -ErrorAction SilentlyContinue
+
+    # 2. Restore Mouse & Keyboard (Standard Windows Values)
+    $currentStep++; Show-ProgressBar "Restoring Defaults" ($currentStep / $steps * 100) "Resetting Input Devices..."
+    $pathMouse = "HKCU:\Control Panel\Mouse"
+    Set-RegKey $pathMouse "MouseSensitivity" "10" "String"
+    Set-RegKey $pathMouse "MouseSpeed" "1" "String" # Default is 1 (Enhanced Pointer Precision ON usually)
+    Set-RegKey $pathMouse "MouseThreshold1" "6" "String"
+    Set-RegKey $pathMouse "MouseThreshold2" "10" "String"
+
+    $pathKb = "HKCU:\Control Panel\Keyboard"
+    Set-RegKey $pathKb "KeyboardDelay" "1" "String"
+    Set-RegKey $pathKb "KeyboardSpeed" "31" "String"
+
+    # 3. Restore Queue Sizes
+    $currentStep++; Show-ProgressBar "Restoring Defaults" ($currentStep / $steps * 100) "Resetting Buffer Sizes..."
+    Set-RegKey "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" "KeyboardDataQueueSize" 100 "DWord"
+    Set-RegKey "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" "MouseDataQueueSize" 100 "DWord"
+
+    # 4. Restore Graphics & System Profile
+    $currentStep++; Show-ProgressBar "Restoring Defaults" ($currentStep / $steps * 100) "Resetting System Profile..."
+    $pathGames = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games"
+    Set-RegKey $pathGames "GPU Priority" 8 "DWord"
+    Set-RegKey $pathGames "Priority" 2 "DWord"
+    Set-RegKey $pathGames "Scheduling Category" "Medium" "String"
+    Set-RegKey $pathGames "SFIO Priority" "Normal" "String"
+
+    $pathSys = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
+    Set-RegKey $pathSys "NetworkThrottlingIndex" 10 "DWord" # Default is 10
+    Set-RegKey $pathSys "SystemResponsiveness" 20 "DWord" # Default is 20%
+
+    # 5. Restore Memory Management
+    $currentStep++; Show-ProgressBar "Restoring Defaults" ($currentStep / $steps * 100) "Resetting Memory Manager..."
+    $pathMem = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+    Set-RegKey $pathMem "DisablePagingExecutive" 0 "DWord"
+    Set-RegKey $pathMem "LargeSystemCache" 0 "DWord"
+    Set-RegKey $pathMem "IOPageLockLimit" 0 "DWord"
+
+    # 6. Complete
+    $currentStep++; Show-ProgressBar "Done" 100 "Restore Completed!"
+    Start-Sleep -Seconds 1
+    Write-Host "`n[SUCCESS] ล้างค่ากลับเป็นปกติแล้ว! กรุณารีสตาร์ทคอมพิวเตอร์" -ForegroundColor Cyan
+}
+
+# --- Main Menu UI ---
+Clear-Host
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host "      SYSTEM OPTIMIZER & LATENCY FIXER       " -ForegroundColor White
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  [1] ติดตั้งค่า (Install Optimization)" -ForegroundColor Green
+Write-Host "  [2] ล้างค่าเดิม (Restore Windows Default)" -ForegroundColor Yellow
+Write-Host "  [3] ออกจากโปรแกรม (Exit)" -ForegroundColor Red
+Write-Host ""
+$choice = Read-Host "กรุณาเลือกหัวข้อ (1-3)"
+
+switch ($choice) {
+    "1" { Install-Tweaks }
+    "2" { Restore-Defaults }
+    "3" { Exit }
+    Default { Write-Host "เลือกผิด! กรุณารันใหม่" -ForegroundColor Red }
+}
+
+Write-Host ""
+Write-Host "กด Enter เพื่อปิดโปรแกรม..."
+Read-Host
