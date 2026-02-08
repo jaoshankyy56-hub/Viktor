@@ -1,0 +1,106 @@
+Clear-Host
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host "   WELLVIKTORSHOP | FiveM TWEAK" -ForegroundColor Magenta
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "[1] Install Tweak -ForegroundColor Green
+Write-Host "[2] Clean / Reset -ForegroundColor Yellow
+Write-Host ""
+$choice = Read-Host "เลือกเมนู (1 หรือ 2)"
+
+# ================= INSTALL =================
+if ($choice -eq "1") {
+    Write-Host "`nApplying FiveM Tweak..." -ForegroundColor Cyan
+
+    # CPU
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" `
+    -Name "Win32TimeSlice" -Type DWord -Value 1
+
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" `
+    -Name "Win32PrioritySeparation" -Type DWord -Value 0x26
+
+    # Mouse
+    Set-ItemProperty "HKCU:\Control Panel\Mouse" -Name "MouseSpeed" -Value "0"
+    Set-ItemProperty "HKCU:\Control Panel\Mouse" -Name "MouseThreshold1" -Value "0"
+    Set-ItemProperty "HKCU:\Control Panel\Mouse" -Name "MouseThreshold2" -Value "0"
+
+    # Keyboard
+    Set-ItemProperty "HKCU:\Control Panel\Keyboard" -Name "KeyboardDelay" -Value "0"
+    Set-ItemProperty "HKCU:\Control Panel\Keyboard" -Name "KeyboardSpeed" -Value "31"
+
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" `
+    -Name "KeyboardDataQueueSize" -Type DWord -Value 10
+
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" `
+    -Name "MouseDataQueueSize" -Type DWord -Value 10
+
+    # GPU / Game
+    $games = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games"
+    Set-ItemProperty $games -Name "GPU Priority" -Type DWord -Value 8
+    Set-ItemProperty $games -Name "Priority" -Type DWord -Value 6
+    Set-ItemProperty $games -Name "Scheduling Category" -Value "High"
+    Set-ItemProperty $games -Name "SFIO Priority" -Value "High"
+
+    # System
+    Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" `
+    -Name "NetworkThrottlingIndex" -Type DWord -Value 0xffffffff
+
+    Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" `
+    -Name "SystemResponsiveness" -Type DWord -Value 0
+
+    # Memory
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" `
+    -Name "DisablePagingExecutive" -Type DWord -Value 1
+
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" `
+    -Name "LargeSystemCache" -Type DWord -Value 0
+
+    Write-Host "`n✔ INSTALL COMPLETE (แนะนำรีสตาร์ท)" -ForegroundColor Green
+}
+
+# ================= CLEAN / RESET =================
+elseif ($choice -eq "2") {
+    Write-Host "`nCleaning / Restoring values..." -ForegroundColor Yellow
+
+    # CPU
+    Remove-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" `
+    -Name "Win32TimeSlice" -ErrorAction SilentlyContinue
+
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" `
+    -Name "Win32PrioritySeparation" -Type DWord -Value 0x26
+
+    # Mouse
+    Set-ItemProperty "HKCU:\Control Panel\Mouse" -Name "MouseSpeed" -Value "1"
+    Set-ItemProperty "HKCU:\Control Panel\Mouse" -Name "MouseThreshold1" -Value "6"
+    Set-ItemProperty "HKCU:\Control Panel\Mouse" -Name "MouseThreshold2" -Value "10"
+
+    # Keyboard
+    Set-ItemProperty "HKCU:\Control Panel\Keyboard" -Name "KeyboardDelay" -Value "1"
+
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" `
+    -Name "KeyboardDataQueueSize" -Type DWord -Value 100
+
+    Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" `
+    -Name "MouseDataQueueSize" -Type DWord -Value 100
+
+    # Game
+    $games = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games"
+    Set-ItemProperty $games -Name "GPU Priority" -Type DWord -Value 2
+    Set-ItemProperty $games -Name "Priority" -Type DWord -Value 2
+    Set-ItemProperty $games -Name "Scheduling Category" -Value "Medium"
+    Set-ItemProperty $games -Name "SFIO Priority" -Value "Normal"
+
+    # System
+    Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" `
+    -Name "NetworkThrottlingIndex" -Type DWord -Value 10
+
+    Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" `
+    -Name "SystemResponsiveness" -Type DWord -Value 20
+
+    Write-Host "`n✔ CLEAN COMPLETE (ปลอดภัย)" -ForegroundColor Green
+}
+else {
+    Write-Host "เลือกไม่ถูกต้อง" -ForegroundColor Red
+}
+
+Pause
