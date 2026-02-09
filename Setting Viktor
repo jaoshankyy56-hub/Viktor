@@ -31,7 +31,7 @@ function Set-RegKey {
     New-ItemProperty -Path $Path -Name $Name -Value $Value -PropertyType $Type -Force | Out-Null
 }
 
-# --- Part 1: Install Optimization ---
+# --- Part 1: Install ---
 function Install-Tweaks {
     Clear-Host
     Write-Host ">>> Installing Optimization Tweaks..." -ForegroundColor Green
@@ -98,7 +98,7 @@ function Install-Tweaks {
     Write-Host "`n[SUCCESS] Optimization applied successfully! Please restart your computer." -ForegroundColor Cyan
 }
 
-# --- Part 2: Restore Defaults ---
+# --- Part 2: Restore ---
 function Restore-Defaults {
     Clear-Host
     Write-Host ">>> Restoring Windows Defaults..." -ForegroundColor Yellow
