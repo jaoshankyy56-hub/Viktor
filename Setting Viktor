@@ -161,8 +161,8 @@ Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host "      SYSTEM OPTIMIZER & LATENCY FIXER       " -ForegroundColor White
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  [1] Install Optimization" -ForegroundColor Green
-Write-Host "  [2] Restore Windows Defaults" -ForegroundColor Yellow
+Write-Host "  [1] Install" -ForegroundColor Green
+Write-Host "  [2] Restore" -ForegroundColor Yellow
 Write-Host "  [3] Exit" -ForegroundColor Red
 Write-Host ""
 $choice = Read-Host "Please select an option (1-3)"
