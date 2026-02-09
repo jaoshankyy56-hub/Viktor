@@ -6,14 +6,14 @@
     3. UI Progress Bar 0-100%
 #>
 
-# --- ตรวจสอบสิทธิ์ Administrator (Auto Elevate) ---
+# --- Check for Administrator Privileges (Auto Elevate) ---
 if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "กำลังขอสิทธิ์ Administrator เพื่อแก้ไข Registry..." -ForegroundColor Yellow
+    Write-Host "Requesting Administrator privileges to modify Registry..." -ForegroundColor Yellow
     Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     Exit
 }
 
-# ---(Progress Bar UI) ---
+# --- Function: Progress Bar UI ---
 function Show-ProgressBar {
     param (
         [string]$Activity,
@@ -21,20 +21,20 @@ function Show-ProgressBar {
         [string]$Status
     )
     Write-Progress -Activity $Activity -Status "$Status ($Percent%)" -PercentComplete $Percent
-    Start-Sleep -Milliseconds 50 #
+    Start-Sleep -Milliseconds 50 # Delay slightly to show the animation
 }
 
-# --- ฟังก์ชัน: ตั้งค่า Registry (Helper) ---
+# --- Function: Set Registry Key (Helper) ---
 function Set-RegKey {
     param ($Path, $Name, $Value, $Type)
     if (!(Test-Path $Path)) { New-Item -Path $Path -Force | Out-Null }
     New-ItemProperty -Path $Path -Name $Name -Value $Value -PropertyType $Type -Force | Out-Null
 }
 
-# --- ส่วนที่ 1: Optimization (Install) ---
+# --- Part 1: Install Optimization ---
 function Install-Tweaks {
     Clear-Host
-    Write-Host ">>> กำลังติดตั้งค่า Optimization..." -ForegroundColor Green
+    Write-Host ">>> Installing Optimization Tweaks..." -ForegroundColor Green
     
     $steps = 10
     $currentStep = 0
@@ -95,13 +95,13 @@ function Install-Tweaks {
     # 10. Complete
     $currentStep++; Show-ProgressBar "Done" 100 "Optimization Completed!"
     Start-Sleep -Seconds 1
-    Write-Host "`n[SUCCESS] ติดตั้งค่าเรียบร้อย! กรุณารีสตาร์ทคอมพิวเตอร์เพื่อให้ผลลัพธ์ทำงาน" -ForegroundColor Cyan
+    Write-Host "`n[SUCCESS] Optimization applied successfully! Please restart your computer." -ForegroundColor Cyan
 }
 
-# --- ส่วนที่ 2: (Restore) ---
+# --- Part 2: Restore Defaults ---
 function Restore-Defaults {
     Clear-Host
-    Write-Host ">>> กำลังล้างค่ากลับสู่ Windows Default..." -ForegroundColor Yellow
+    Write-Host ">>> Restoring Windows Defaults..." -ForegroundColor Yellow
     
     $steps = 6
     $currentStep = 0
@@ -152,7 +152,7 @@ function Restore-Defaults {
     # 6. Complete
     $currentStep++; Show-ProgressBar "Done" 100 "Restore Completed!"
     Start-Sleep -Seconds 1
-    Write-Host "`n[SUCCESS] ล้างค่ากลับเป็นปกติแล้ว! กรุณารีสตาร์ทคอมพิวเตอร์" -ForegroundColor Cyan
+    Write-Host "`n[SUCCESS] Settings restored to default! Please restart your computer." -ForegroundColor Cyan
 }
 
 # --- Main Menu UI ---
@@ -161,19 +161,19 @@ Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host "      SYSTEM OPTIMIZER & LATENCY FIXER       " -ForegroundColor White
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  [1] (Install Optimization)" -ForegroundColor Green
-Write-Host "  [2] (Restore Windows Default)" -ForegroundColor Yellow
-Write-Host "  [3] (Exit)" -ForegroundColor Red
+Write-Host "  [1] Install Optimization" -ForegroundColor Green
+Write-Host "  [2] Restore Windows Defaults" -ForegroundColor Yellow
+Write-Host "  [3] Exit" -ForegroundColor Red
 Write-Host ""
-$choice = Read-Host "กรุณาเลือกหัวข้อ (1-3)"
+$choice = Read-Host "Please select an option (1-3)"
 
 switch ($choice) {
     "1" { Install-Tweaks }
     "2" { Restore-Defaults }
     "3" { Exit }
-    Default { Write-Host "เลือกผิด! กรุณารันใหม่" -ForegroundColor Red }
+    Default { Write-Host "Invalid selection! Please try again." -ForegroundColor Red }
 }
 
 Write-Host ""
-Write-Host "Enter"
+Write-Host "Press Enter to close..."
 Read-Host
